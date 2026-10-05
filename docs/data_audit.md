@@ -313,7 +313,7 @@ Exact rows present in **both** Training.csv and Testing.csv: **3048**
 
 ## 4.10 – Disease Name Inconsistencies
 
-**Whitespace issues** (name != name.strip()): `['Hypertension ', 'Diabetes ']`
+**Whitespace issues** (name != name.strip()): `['Diabetes ', 'Hypertension ']`
 
 **Case inconsistencies** (same name, different capitalisation): `{}`
 
