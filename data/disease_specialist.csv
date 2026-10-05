@@ -1,0 +1,42 @@
+disease,specialist,verified,source
+AIDS,Infectious Disease Specialist,false,TO_BE_FILLED_BY_TEAM
+Acne,Dermatologist,false,TO_BE_FILLED_BY_TEAM
+Alcoholic hepatitis,Hepatologist,false,TO_BE_FILLED_BY_TEAM
+Allergy,Allergist,false,TO_BE_FILLED_BY_TEAM
+Arthritis,Rheumatologist,false,TO_BE_FILLED_BY_TEAM
+Bronchial Asthma,Pulmonologist,false,TO_BE_FILLED_BY_TEAM
+Cervical spondylosis,Orthopedist,false,TO_BE_FILLED_BY_TEAM
+Chicken pox,Infectious Disease Specialist,false,TO_BE_FILLED_BY_TEAM
+Chronic cholestasis,Gastroenterologist,false,TO_BE_FILLED_BY_TEAM
+Common Cold,General Physician,false,TO_BE_FILLED_BY_TEAM
+Dengue,Infectious Disease Specialist,false,TO_BE_FILLED_BY_TEAM
+Diabetes,Endocrinologist,false,TO_BE_FILLED_BY_TEAM
+Dimorphic Hemorrhoids (Piles),Colorectal Surgeon,false,TO_BE_FILLED_BY_TEAM
+Drug Reaction,Allergist,false,TO_BE_FILLED_BY_TEAM
+Fungal infection,Dermatologist,false,TO_BE_FILLED_BY_TEAM
+GERD,Gastroenterologist,false,TO_BE_FILLED_BY_TEAM
+Gastroenteritis,Gastroenterologist,false,TO_BE_FILLED_BY_TEAM
+Heart attack,Cardiologist,false,TO_BE_FILLED_BY_TEAM
+Hepatitis A,Hepatologist,false,TO_BE_FILLED_BY_TEAM
+Hepatitis B,Hepatologist,false,TO_BE_FILLED_BY_TEAM
+Hepatitis C,Hepatologist,false,TO_BE_FILLED_BY_TEAM
+Hepatitis D,Hepatologist,false,TO_BE_FILLED_BY_TEAM
+Hepatitis E,Hepatologist,false,TO_BE_FILLED_BY_TEAM
+Hypertension,Cardiologist,false,TO_BE_FILLED_BY_TEAM
+Hyperthyroidism,Endocrinologist,false,TO_BE_FILLED_BY_TEAM
+Hypoglycemia,Endocrinologist,false,TO_BE_FILLED_BY_TEAM
+Hypothyroidism,Endocrinologist,false,TO_BE_FILLED_BY_TEAM
+Impetigo,Dermatologist,false,TO_BE_FILLED_BY_TEAM
+Jaundice,Hepatologist,false,TO_BE_FILLED_BY_TEAM
+Malaria,Infectious Disease Specialist,false,TO_BE_FILLED_BY_TEAM
+Migraine,Neurologist,false,TO_BE_FILLED_BY_TEAM
+Osteoarthritis,Orthopedist,false,TO_BE_FILLED_BY_TEAM
+Paralysis (brain hemorrhage),Neurologist,false,TO_BE_FILLED_BY_TEAM
+Paroxysmal Positional Vertigo,Neurologist,false,TO_BE_FILLED_BY_TEAM
+Peptic Ulcer Disease,Gastroenterologist,false,TO_BE_FILLED_BY_TEAM
+Pneumonia,Pulmonologist,false,TO_BE_FILLED_BY_TEAM
+Psoriasis,Dermatologist,false,TO_BE_FILLED_BY_TEAM
+Tuberculosis,Pulmonologist,false,TO_BE_FILLED_BY_TEAM
+Typhoid,Infectious Disease Specialist,false,TO_BE_FILLED_BY_TEAM
+Urinary tract infection,Urologist,false,TO_BE_FILLED_BY_TEAM
+Varicose veins,Vascular Surgeon,false,TO_BE_FILLED_BY_TEAM
