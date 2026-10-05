@@ -1,0 +1,56 @@
+{
+  "_comment": "EMERGENCY CLINICAL TRIAGE RULES - Computed independently of the ML model.",
+  "_review_status": "needs review by the team",
+  "critical_individual_symptoms": [
+    {
+      "symptom": "chest_pain",
+      "reason": "Potential acute coronary syndrome or myocardial infarction."
+    },
+    {
+      "symptom": "breathlessness",
+      "reason": "Acute respiratory distress or acute pulmonary failure."
+    },
+    {
+      "symptom": "altered_sensorium",
+      "reason": "Acute metabolic crisis, encephalopathy, or severe neurological deficit."
+    },
+    {
+      "symptom": "coma",
+      "reason": "Unresponsive state indicating critical central nervous or metabolic collapse."
+    },
+    {
+      "symptom": "weakness_of_one_body_side",
+      "reason": "Unilateral hemiparesis indicating possible acute stroke (CVA)."
+    },
+    {
+      "symptom": "acute_liver_failure",
+      "reason": "Fulminant hepatic failure requiring emergency hepatology intervention."
+    },
+    {
+      "symptom": "stomach_bleeding",
+      "reason": "Active gastrointestinal hemorrhage requiring immediate endoscopic stabilization."
+    },
+    {
+      "symptom": "blood_in_sputum",
+      "reason": "Hemoptysis indicating acute pulmonary vascular or parenchymal damage."
+    }
+  ],
+  "critical_combinations": [
+    {
+      "symptoms": ["chest_pain", "sweating"],
+      "reason": "Combination of chest pain and sweating is a high-risk presentation for acute myocardial infarction."
+    },
+    {
+      "symptoms": ["chest_pain", "breathlessness"],
+      "reason": "Chest pain with breathlessness indicates potential acute cardiopulmonary emergency."
+    },
+    {
+      "symptoms": ["high_fever", "altered_sensorium"],
+      "reason": "High fever accompanied by altered mental status suggests acute meningitis, encephalitis, or septic shock."
+    },
+    {
+      "symptoms": ["dizziness", "loss_of_balance", "slurred_speech"],
+      "reason": "Acute vestibular and neurological deficits suggest cerebellar or posterior circulation stroke."
+    }
+  ]
+}
