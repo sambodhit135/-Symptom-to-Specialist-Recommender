@@ -1,0 +1,19 @@
+{
+  "model_name": "symptom-disease-classifier",
+  "model_version": 1,
+  "model_type": "logistic_regression",
+  "run_id": "33eb5360d44b4dd5add13badbc96fcf9",
+  "aliases": [
+    "staging",
+    "production"
+  ],
+  "metrics": {
+    "val_top3_accuracy": 1.0,
+    "val_macro_f1": 1.0,
+    "val_accuracy": 1.0,
+    "test_top3_accuracy": 1.0,
+    "test_macro_f1": 1.0,
+    "test_accuracy": 1.0
+  },
+  "quality_gate_passed": true
+}

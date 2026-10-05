@@ -1,0 +1,44 @@
+# config/model_config.yaml
+# Phase 3 – Model Training, Evaluation, and Quality Gate Configuration
+
+experiment:
+  name: "symptom-disease"
+  tracking_uri: "sqlite:///mlflow.db"
+  artifact_location: "./mlartifacts"
+  registered_model_name: "symptom-disease-classifier"
+
+data:
+  train_path: "data/processed/train.csv"
+  val_path: "data/processed/val.csv"
+  test_path: "data/processed/test.csv"
+  symptoms_path: "data/processed/symptoms.json"
+  diseases_path: "data/processed/diseases.json"
+  target_col: "prognosis"
+
+training:
+  random_seed: 42
+
+# Quality Gate for production deployment
+quality_gate:
+  metric: "val_top3_accuracy"
+  min_val_top3_accuracy: 0.90
+  min_val_macro_f1: 0.85
+  min_test_top3_accuracy: 0.90
+  max_train_val_gap: 0.15
+
+# Model Hyperparameters
+models:
+  logistic_regression:
+    solver: "lbfgs"
+    max_iter: 1000
+    C: 1.0
+  random_forest:
+    n_estimators: 100
+    max_depth: 10
+    random_state: 42
+  xgboost:
+    n_estimators: 100
+    max_depth: 4
+    learning_rate: 0.1
+    eval_metric: "mlogloss"
+    random_state: 42
