@@ -1,0 +1,22 @@
+# .dockerignore
+venv/
+.venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+htmlcov/
+data/raw/
+mlruns/
+mlartifacts/
+mlflow.db
+.git/
+.gitignore
+.idea/
+.vscode/
+notebooks/
+reports/
+tests/
