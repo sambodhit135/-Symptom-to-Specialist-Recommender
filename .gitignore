@@ -12,6 +12,9 @@ __pycache__/
 .env
 .env.*
 
+# Docker secrets (keep .env.example)
+!.env.example
+
 # MLflow artefacts
 mlflow.db
 mlruns/

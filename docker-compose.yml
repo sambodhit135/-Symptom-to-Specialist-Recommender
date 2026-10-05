@@ -1,0 +1,83 @@
+# =============================================================================
+# docker-compose.yml – Disease Prediction MLOps Stack
+# =============================================================================
+# Services:
+#   api     - FastAPI prediction service (port 8000)
+#   mlflow  - MLflow tracking server   (port 5000)
+#
+# Usage:
+#   docker compose build      # build service images
+#   docker compose up -d      # start all services in background
+#   docker compose ps         # check service health
+#   docker compose down       # stop services
+#   docker compose down -v    # stop services and wipe named volumes
+
+services:
+
+  # ── MLflow Tracking Server ─────────────────────────────────────────────────
+  mlflow:
+    image: diseasepredictionusingmachinelearning-api
+    container_name: mlflow-server
+    user: "0:0"
+    restart: unless-stopped
+    command: >
+      mlflow server
+      --backend-store-uri ${MLFLOW_BACKEND_URI:-sqlite:////mlflow_data/mlflow.db}
+      --host 0.0.0.0
+      --port 5000
+    ports:
+      - "${MLFLOW_PORT:-5000}:5000"
+    volumes:
+      - mlflow_data:/mlflow_data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 10s
+      timeout: 5s
+      start_period: 15s
+      retries: 5
+    networks:
+      - app-net
+
+  # ── Prediction API ─────────────────────────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: diseasepredictionusingmachinelearning-api
+    container_name: disease-api
+    restart: unless-stopped
+    ports:
+      - "${API_PORT:-8000}:8000"
+    environment:
+      - MLFLOW_TRACKING_URI=${MLFLOW_TRACKING_URI}
+      - FEEDBACK_DIR=${FEEDBACK_DIR:-/app/data/feedback}
+      - PROD_LOGS_DIR=${PROD_LOGS_DIR:-/app/data/prod_logs}
+      - MLFLOW_DISABLE_AGENT_HINT=1
+    volumes:
+      - feedback_data:/app/data/feedback
+      - prod_logs_data:/app/data/prod_logs
+    depends_on:
+      mlflow:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      start_period: 10s
+      retries: 5
+    networks:
+      - app-net
+
+# ── Named Volumes ──────────────────────────────────────────────────────────
+volumes:
+  mlflow_data:
+    driver: local
+  feedback_data:
+    driver: local
+  prod_logs_data:
+    driver: local
+
+# ── Shared Network ─────────────────────────────────────────────────────────
+networks:
+  app-net:
+    driver: bridge
