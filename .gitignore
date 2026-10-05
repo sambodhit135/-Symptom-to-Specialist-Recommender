@@ -1,0 +1,44 @@
+# Python venv
+venv/
+.venv/
+env/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Environment / secrets
+.env
+.env.*
+
+# MLflow artefacts
+mlflow.db
+mlruns/
+mlartifacts/
+
+# Trained model binaries (keep .gitkeep)
+models/*.pkl
+models/*.joblib
+
+# Reports generated at runtime
+reports/
+
+# Feedback and production log data
+data/feedback/*
+data/prod_logs/*
+
+# Keep placeholder files
+!data/feedback/.gitkeep
+!data/prod_logs/.gitkeep
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
