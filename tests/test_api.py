@@ -155,3 +155,35 @@ def test_feedback_unknown_disease_returns_422(client):
     assert response.status_code == 422
     data = response.json()
     assert "Unknown true_disease" in data["detail"]
+
+
+def test_metrics_endpoint_returns_prometheus_format(client):
+    """Verify GET /metrics returns HTTP 200 and standard Prometheus exposition format."""
+    response = client.get("/metrics")
+    assert response.status_code == 200
+    assert "text/plain" in response.headers.get("content-type", "")
+    body = response.text
+    assert "api_requests_total" in body
+    assert "api_request_latency_seconds" in body
+    assert "api_model_info" in body
+
+
+def test_metrics_updated_after_predict_and_feedback(client):
+    """Verify Prometheus counters and histograms update after /predict and /feedback."""
+    # 1. Trigger prediction with emergency condition
+    client.post("/predict", json={"symptoms": ["chest_pain", "sweating"]})
+
+    # 2. Trigger feedback
+    client.post("/feedback", json={"request_id": "metrics-test-01", "helpful": True})
+
+    # 3. Scrape /metrics
+    resp = client.get("/metrics")
+    assert resp.status_code == 200
+    body = resp.text
+
+    assert "api_predictions_by_disease_total" in body
+    assert "api_predictions_by_specialist_total" in body
+    assert "api_emergency_flags_total" in body
+    assert "api_prediction_confidence_bucket" in body
+    assert "api_feedback_total" in body
+
