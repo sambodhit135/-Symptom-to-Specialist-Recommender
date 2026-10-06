@@ -28,6 +28,10 @@ models/*.joblib
 reports/*
 !reports/drift/
 !reports/drift/.gitkeep
+# Keep small JSON summaries; exclude large Evidently HTML reports (5+ MB each)
+!reports/drift/*.json
+reports/drift/*.html
+
 
 # Feedback and production log data
 data/feedback/*
@@ -49,3 +53,6 @@ Thumbs.db
 
 # Jupyter checkpoints
 .ipynb_checkpoints/
+
+# Temporary candidate model directory
+models/candidate_temp/

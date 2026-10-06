@@ -188,15 +188,25 @@ def test_metrics_updated_after_predict_and_feedback(client):
     assert "api_feedback_total" in body
 
 
-def test_admin_reload_model_forbidden_without_key(client):
+def test_admin_reload_model_service_unavailable_when_key_unset(client, monkeypatch):
+    """Verify POST /admin/reload-model returns 503 when ADMIN_API_KEY is not configured."""
+    monkeypatch.delenv("ADMIN_API_KEY", raising=False)
+    response = client.post("/admin/reload-model")
+    assert response.status_code == 503
+    assert "ADMIN_API_KEY environment variable is not set" in response.json()["detail"]
+
+
+def test_admin_reload_model_forbidden_without_key(client, monkeypatch):
     """Verify POST /admin/reload-model is rejected with 403 when key is missing."""
+    monkeypatch.setenv("ADMIN_API_KEY", "test-admin-secret")
     response = client.post("/admin/reload-model")
     assert response.status_code == 403
     assert "Forbidden" in response.json()["detail"]
 
 
-def test_admin_reload_model_forbidden_with_wrong_key(client):
+def test_admin_reload_model_forbidden_with_wrong_key(client, monkeypatch):
     """Verify POST /admin/reload-model is rejected with 403 when key is incorrect."""
+    monkeypatch.setenv("ADMIN_API_KEY", "test-admin-secret")
     response = client.post("/admin/reload-model", headers={"X-API-Key": "wrong-secret-key"})
     assert response.status_code == 403
     assert "Forbidden" in response.json()["detail"]

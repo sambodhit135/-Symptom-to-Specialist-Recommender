@@ -340,7 +340,13 @@ def reload_model(x_api_key: str = Header(None, alias="X-API-Key")):
     Safely reload the active production model and schemas into memory.
     Protected by ADMIN_API_KEY environment variable.
     """
-    expected_key = os.environ.get("ADMIN_API_KEY", "default-admin-secret")
+    expected_key = os.environ.get("ADMIN_API_KEY")
+    if not expected_key:
+        raise HTTPException(
+            status_code=503,
+            detail="Admin reload endpoint is disabled: ADMIN_API_KEY environment variable is not set.",
+        )
+
     if not x_api_key or x_api_key != expected_key:
         raise HTTPException(
             status_code=403,
