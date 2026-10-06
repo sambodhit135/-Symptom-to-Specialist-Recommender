@@ -1,0 +1,105 @@
+{
+  "status": "completed",
+  "timestamp": "2026-10-06T04:56:48.432249+00:00",
+  "drift_detected": true,
+  "share_of_drifted_features": 0.3359,
+  "drift_share_threshold": 0.2,
+  "drifted_features_count": 44,
+  "total_features": 131,
+  "top_drifted_features": [
+    {
+      "feature": "vomiting",
+      "p_value": 0.0,
+      "threshold": 0.05
+    },
+    {
+      "feature": "burning_micturition",
+      "p_value": 0.0,
+      "threshold": 0.05
+    },
+    {
+      "feature": "spotting_urination",
+      "p_value": 0.0,
+      "threshold": 0.05
+    },
+    {
+      "feature": "fatigue",
+      "p_value": 0.0,
+      "threshold": 0.05
+    },
+    {
+      "feature": "high_fever",
+      "p_value": 0.0,
+      "threshold": 0.05
+    },
+    {
+      "feature": "loss_of_appetite",
+      "p_value": 0.0,
+      "threshold": 0.05
+    },
+    {
+      "feature": "bladder_discomfort",
+      "p_value": 0.0,
+      "threshold": 0.05
+    },
+    {
+      "feature": "foul_smell_of_urine",
+      "p_value": 0.0,
+      "threshold": 0.05
+    },
+    {
+      "feature": "continuous_feel_of_urine",
+      "p_value": 0.0,
+      "threshold": 0.05
+    },
+    {
+      "feature": "internal_itching",
+      "p_value": 0.0,
+      "threshold": 0.05
+    },
+    {
+      "feature": "toxic_look_(typhos)",
+      "p_value": 0.0,
+      "threshold": 0.05
+    },
+    {
+      "feature": "altered_sensorium",
+      "p_value": 0.0,
+      "threshold": 0.05
+    },
+    {
+      "feature": "headache",
+      "p_value": 1e-06,
+      "threshold": 0.05
+    },
+    {
+      "feature": "yellowish_skin",
+      "p_value": 1e-06,
+      "threshold": 0.05
+    },
+    {
+      "feature": "nausea",
+      "p_value": 1e-06,
+      "threshold": 0.05
+    }
+  ],
+  "prediction_distribution_drift": {
+    "drift_detected": true,
+    "p_value": 0.0,
+    "threshold": 0.05
+  },
+  "rows_compared": {
+    "reference_rows": 243,
+    "current_rows": 100
+  },
+  "feedback_concept_drift": {
+    "status": "insufficient_data",
+    "message": "Sample size 3 below minimum requirement (10).",
+    "total_feedback": 3,
+    "unhelpful_count": 0,
+    "unhelpful_share": null,
+    "threshold": 0.25,
+    "concept_drift_warning": false
+  },
+  "html_report_path": "D:\\Disease Prediction Using Machine Learning\\reports\\drift\\drift_report_latest.html"
+}

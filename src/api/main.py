@@ -25,7 +25,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List
 
-from fastapi import FastAPI, HTTPException, Request, Response
+from fastapi import FastAPI, Header, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 
@@ -98,7 +98,14 @@ feedback_lock = threading.Lock()
 request_log_lock = threading.Lock()
 
 # Endpoints to track - /metrics excluded to avoid scraper noise
-_TRACKED_ENDPOINTS = {"/health", "/symptoms", "/model-info", "/predict", "/feedback"}
+_TRACKED_ENDPOINTS = {
+    "/health",
+    "/symptoms",
+    "/model-info",
+    "/predict",
+    "/feedback",
+    "/admin/reload-model",
+}
 
 
 # -----------------------------------------------------------------------------
@@ -326,3 +333,40 @@ def feedback(request: FeedbackRequest):
         raise HTTPException(status_code=500, detail="Failed to save feedback.")
 
     return FeedbackResponse(status="recorded", request_id=request.request_id)
+
+@app.post("/admin/reload-model")
+def reload_model(x_api_key: str = Header(None, alias="X-API-Key")):
+    """
+    Safely reload the active production model and schemas into memory.
+    Protected by ADMIN_API_KEY environment variable.
+    """
+    expected_key = os.environ.get("ADMIN_API_KEY", "default-admin-secret")
+    if not x_api_key or x_api_key != expected_key:
+        raise HTTPException(
+            status_code=403,
+            detail="Forbidden: Invalid or missing administrative API key in X-API-Key header.",
+        )
+
+    try:
+        model_manager.load()
+        MODEL_INFO.info(
+            {
+                "model_name": "symptom-disease-classifier",
+                "model_version": model_manager.model_version,
+                "model_type": model_manager.model_type,
+                "model_alias": model_manager.model_alias,
+            }
+        )
+        return {
+            "status": "reloaded",
+            "model_version": model_manager.model_version,
+            "model_type": model_manager.model_type,
+            "loaded_from": model_manager.loaded_from,
+            "load_time_seconds": round(model_manager.load_time_seconds, 4),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+    except Exception as e:
+        logger.error(f"Failed to reload model: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to reload model: {str(e)}")
+
+

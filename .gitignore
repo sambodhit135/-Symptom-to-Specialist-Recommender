@@ -32,10 +32,12 @@ reports/*
 # Feedback and production log data
 data/feedback/*
 data/prod_logs/*
+data/retraining/*
 
 # Keep placeholder files
 !data/feedback/.gitkeep
 !data/prod_logs/.gitkeep
+!data/retraining/.gitkeep
 
 # OS
 .DS_Store

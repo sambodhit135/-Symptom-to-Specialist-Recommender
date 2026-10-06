@@ -187,3 +187,29 @@ def test_metrics_updated_after_predict_and_feedback(client):
     assert "api_prediction_confidence_bucket" in body
     assert "api_feedback_total" in body
 
+
+def test_admin_reload_model_forbidden_without_key(client):
+    """Verify POST /admin/reload-model is rejected with 403 when key is missing."""
+    response = client.post("/admin/reload-model")
+    assert response.status_code == 403
+    assert "Forbidden" in response.json()["detail"]
+
+
+def test_admin_reload_model_forbidden_with_wrong_key(client):
+    """Verify POST /admin/reload-model is rejected with 403 when key is incorrect."""
+    response = client.post("/admin/reload-model", headers={"X-API-Key": "wrong-secret-key"})
+    assert response.status_code == 403
+    assert "Forbidden" in response.json()["detail"]
+
+
+def test_admin_reload_model_success_with_valid_key(client, monkeypatch):
+    """Verify POST /admin/reload-model succeeds when valid ADMIN_API_KEY is provided."""
+    monkeypatch.setenv("ADMIN_API_KEY", "super-secret-test-key")
+    response = client.post("/admin/reload-model", headers={"X-API-Key": "super-secret-test-key"})
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "reloaded"
+    assert data["model_version"] != ""
+    assert "load_time_seconds" in data
+
+

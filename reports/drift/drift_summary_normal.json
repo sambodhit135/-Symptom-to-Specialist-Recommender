@@ -1,0 +1,29 @@
+{
+  "status": "completed",
+  "timestamp": "2026-10-06T04:56:22.330307+00:00",
+  "drift_detected": false,
+  "share_of_drifted_features": 0.0,
+  "drift_share_threshold": 0.2,
+  "drifted_features_count": 0,
+  "total_features": 131,
+  "top_drifted_features": [],
+  "prediction_distribution_drift": {
+    "drift_detected": false,
+    "p_value": 0.18401,
+    "threshold": 0.05
+  },
+  "rows_compared": {
+    "reference_rows": 243,
+    "current_rows": 100
+  },
+  "feedback_concept_drift": {
+    "status": "insufficient_data",
+    "message": "Sample size 3 below minimum requirement (10).",
+    "total_feedback": 3,
+    "unhelpful_count": 0,
+    "unhelpful_share": null,
+    "threshold": 0.25,
+    "concept_drift_warning": false
+  },
+  "html_report_path": "D:\\Disease Prediction Using Machine Learning\\reports\\drift\\drift_report_latest.html"
+}
