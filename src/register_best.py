@@ -17,20 +17,19 @@ Quality Gate:
 
 import os
 import sys
+
 os.environ["MLFLOW_DISABLE_AGENT_HINT"] = "1"
 sys.path.insert(0, os.path.abspath("."))
-import shutil
 import json
-import yaml
-import joblib
+import shutil
 from pathlib import Path
 
+import joblib
 import mlflow
 import mlflow.sklearn
-from mlflow.tracking import MlflowClient
+import yaml
 from mlflow.sklearn import SERIALIZATION_FORMAT_CLOUDPICKLE
-
-from src.train import XGBoostDiseaseClassifier
+from mlflow.tracking import MlflowClient
 
 
 def load_config(config_path: str = "config/model_config.yaml") -> dict:
@@ -73,7 +72,7 @@ def register_best_model(config_path: str = "config/model_config.yaml"):
     test_acc = best_run.data.metrics.get("test_accuracy", 0.0)
 
     print("\n" + "="*80)
-    print(f"BEST RUN IDENTIFIED (Validation-based selection):")
+    print("BEST RUN IDENTIFIED (Validation-based selection):")
     print(f"  Model Type:        {best_model_name}")
     print(f"  Run ID:            {best_run_id}")
     print(f"  Val Top-3 Acc:     {val_top3:.4f}")
@@ -116,14 +115,14 @@ def register_best_model(config_path: str = "config/model_config.yaml"):
 
     # Load from MLflow run and save standalone
     loaded_model = mlflow.sklearn.load_model(model_uri)
-    
+
     # Save standard MLflow model bundle
     mlflow.sklearn.save_model(
         loaded_model,
         str(prod_dir / "mlflow_model"),
         serialization_format=SERIALIZATION_FORMAT_CLOUDPICKLE,
     )
-    
+
     # Also save native joblib binary for ultra-lightweight standalone loading
     joblib.dump(loaded_model, prod_dir / "model.joblib")
 

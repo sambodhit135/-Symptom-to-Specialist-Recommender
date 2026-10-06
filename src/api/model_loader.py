@@ -7,15 +7,16 @@ or falls back gracefully to standalone models/production/.
 Loads symptoms.json and disease_specialist.csv at startup.
 """
 
+import json
 import os
 import sys
 import time
-import json
-import joblib
-import pandas as pd
-import numpy as np
 from pathlib import Path
-from typing import List, Dict, Any, Optional
+from typing import Any, Dict, List
+
+import joblib
+import numpy as np
+import pandas as pd
 
 # Ensure project root is in sys.path so model wrappers can deserialize
 sys.path.insert(0, os.path.abspath("."))

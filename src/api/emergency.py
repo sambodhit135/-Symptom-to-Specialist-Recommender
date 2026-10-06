@@ -6,9 +6,9 @@ Reads config/emergency_rules.json and evaluates red-flag symptoms and combinatio
 independently of the machine learning prediction model.
 """
 
-import os
 import json
-from typing import List, Tuple, Dict, Any
+import os
+from typing import Any, Dict, List, Tuple
 
 
 class EmergencyEvaluator:

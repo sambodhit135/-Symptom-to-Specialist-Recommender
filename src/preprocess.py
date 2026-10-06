@@ -30,9 +30,10 @@ Import as a module:
     paths = run_preprocessing()
 """
 
-import os
-import json
 import hashlib
+import json
+import os
+
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
@@ -254,7 +255,7 @@ def run_preprocessing() -> dict:
     val_df = X_val.copy()
     val_df[LABEL_COL] = y_val.values
 
-    print(f"\nSplit sizes:")
+    print("\nSplit sizes:")
     print(f"  train : {len(train_df)} rows")
     print(f"  val   : {len(val_df)} rows")
     print(f"  test  : {len(test)} rows (hold-out, never split)")
