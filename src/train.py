@@ -23,25 +23,24 @@ Tracks in MLflow:
 """
 
 import os
+
 os.environ["MLFLOW_DISABLE_AGENT_HINT"] = "1"
-import json
 import hashlib
 import subprocess
-import yaml
-import numpy as np
-import pandas as pd
 from pathlib import Path
 
 import mlflow
 import mlflow.sklearn
+import numpy as np
+import pandas as pd
+import yaml
 from mlflow.models.signature import infer_signature
 from mlflow.sklearn import SERIALIZATION_FORMAT_CLOUDPICKLE
-
 from sklearn.base import BaseEstimator, ClassifierMixin
-from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.preprocessing import LabelEncoder
+from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, f1_score
+from sklearn.preprocessing import LabelEncoder
 from xgboost import XGBClassifier
 
 

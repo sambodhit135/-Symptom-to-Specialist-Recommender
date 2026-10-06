@@ -5,8 +5,6 @@ Integration tests for the FastAPI prediction service using TestClient.
 Zero dependency on external running servers or active network connections.
 """
 
-import os
-import json
 import pytest
 from fastapi.testclient import TestClient
 

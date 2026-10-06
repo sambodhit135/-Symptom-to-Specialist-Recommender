@@ -13,35 +13,34 @@ Features:
   - JSON-structured middleware logging for observability.
 """
 
+import json
+import logging
 import os
 import sys
-import time
-import json
-import uuid
-import logging
 import threading
+import time
+import uuid
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Any, Dict, List
 
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 # Ensure project root in sys.path
 sys.path.insert(0, os.path.abspath("."))
 
+from src.api.emergency import EmergencyEvaluator
+from src.api.model_loader import ModelManager
 from src.api.schemas import (
-    PredictRequest,
-    PredictResponse,
-    PredictionItem,
     FeedbackRequest,
     FeedbackResponse,
     HealthResponse,
     ModelInfoResponse,
+    PredictionItem,
+    PredictRequest,
+    PredictResponse,
 )
-from src.api.model_loader import ModelManager
-from src.api.emergency import EmergencyEvaluator
 
 # -----------------------------------------------------------------------------
 # LOGGING CONFIGURATION (JSON-Structured)
