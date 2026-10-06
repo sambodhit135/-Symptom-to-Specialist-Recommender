@@ -1,65 +1,342 @@
-# Disease Prediction – Symptom-to-Disease-to-Specialist Recommender
+# Disease Prediction — Symptom-to-Disease-to-Specialist Recommender
 
-## Description
-A full-lifecycle MLOps project built for the *MLOps and AI Development* college course.
-Given a set of binary symptom inputs, the system predicts the **top-3 most likely diseases**
-with confidence scores, maps each disease to the appropriate **medical specialist**, raises an
-**emergency flag** when needed, and always shows the disclaimer:
-*"Suggestion tool, not a medical diagnosis."*
-The project follows a complete MLOps lifecycle: data audit → training → evaluation →
-MLflow experiment tracking & model registry → pytest → GitHub Actions CI/CD →
-Docker/Compose → FastAPI → Prometheus + Grafana monitoring → Evidently drift detection →
-Apache Airflow automated retraining → redeploy.
+> **Academic MLOps project** — Not for clinical use.
+> *"Suggestion tool, not a medical diagnosis."*
 
-## Dataset
-Kaggle – *Disease Prediction Using Machine Learning* by kaushil268.
-132 binary symptom columns, target column `prognosis` (41 diseases).
-Files placed in `data/raw/` (never modified directly).
+A full-lifecycle MLOps system built for the *MLOps and AI Development* college course.
+Given a set of binary symptom inputs the system predicts the **top-3 most likely diseases**
+with confidence scores, maps each to the appropriate **medical specialist**, raises an
+**emergency flag** when red-flag rules fire, and serves everything through a production-grade API.
 
-## Setup
+---
 
-```bash
-# 1. Clone the repository
+## Architecture
+
+```mermaid
+flowchart TD
+    A[Raw CSV data/raw/] --> B[src/preprocess.py]
+    B --> C[data/processed/ train/val/test + symptoms.json]
+    C --> D[src/train.py]
+    D --> E[MLflow Tracking Server :5000]
+    E --> F[src/register_best.py]
+    F --> G[models/production/]
+    G --> H[FastAPI :8000]
+    H --> I[POST /predict]
+    H --> J[GET /metrics]
+    J --> K[Prometheus :9090]
+    K --> L[Grafana :3000]
+    H --> M[data/prod_logs/requests.csv]
+    M --> N[src/monitoring/drift.py]
+    N --> O[reports/drift/]
+    O --> P[Airflow DAG]
+    H --> Q[data/feedback/feedback.csv]
+    Q --> P
+    P -->|retrain + promote| G
+    R[GitHub Actions CI] -->|push to main| S[Build & push Docker image]
+    R -->|PR| T[ruff + pytest]
+```
+
+---
+
+## End-to-End Pipeline
+
+```
+Raw Data → Preprocess → Train (3 models) → MLflow Tracking → Quality Gate
+         → Register Production Model → FastAPI Service → Prometheus/Grafana
+         → Evidently Drift Detection → Airflow DAG (auto-retrain + promote)
+                                     ↑ feedback loop from /feedback endpoint
+```
+
+---
+
+## Repository Structure
+
+```
+.
+├── .github/
+│   ├── workflows/
+│   │   ├── ci.yml                # PR checks: ruff + pytest + docker build
+│   │   └── cd.yml                # Push-to-main: build & push to GHCR
+│   └── pull_request_template.md
+├── config/
+│   ├── drift_config.yaml         # Evidently drift thresholds & sample size
+│   ├── emergency_rules.json      # Rule-based emergency red-flag definitions
+│   └── model_config.yaml         # Training hyperparameters & quality gates
+├── dags/
+│   └── retrain_symptom_model.py  # Airflow DAG: check → retrain → promote
+├── data/
+│   ├── raw/                      # Original CSVs (never modified)
+│   ├── processed/                # train.csv, val.csv, test.csv, symptoms.json
+│   ├── feedback/                 # Clinician feedback logs
+│   ├── prod_logs/                # Per-request production logs (for drift)
+│   └── retraining/               # Timestamped retraining datasets
+├── docs/                         # Architecture, workflow, demo, viva notes
+├── models/
+│   ├── production/               # Active serving model artefacts + metadata
+│   └── candidate_temp/           # Candidate model during comparison
+├── monitoring/
+│   ├── prometheus/prometheus.yml # Scrape config
+│   └── grafana/                  # Provisioned datasource + dashboard JSON
+├── reports/drift/                # Evidently HTML reports + JSON summaries
+├── scripts/
+│   ├── generate_traffic.py       # Send N realistic /predict requests
+│   ├── simulate_drift.py         # Normal / shifted traffic simulation
+│   ├── start.ps1                 # One-command stack startup
+│   └── stop.ps1                  # One-command stack teardown
+├── src/
+│   ├── api/
+│   │   ├── main.py               # FastAPI app + middleware
+│   │   ├── metrics.py            # Prometheus metric definitions
+│   │   ├── model_loader.py       # ModelManager (load + predict_top3)
+│   │   ├── emergency.py          # Rule-based emergency triage evaluator
+│   │   └── schemas.py            # Pydantic request/response schemas
+│   ├── monitoring/
+│   │   └── drift.py              # Evidently drift detection + JSON summary
+│   ├── data_audit.py             # EDA report generator
+│   ├── preprocess.py             # Feature engineering + train/val/test split
+│   ├── train.py                  # Multi-model training + MLflow logging
+│   ├── register_best.py          # Quality gate + production registration
+│   └── retrain_pipeline.py       # Retraining pipeline functions for DAG
+├── tests/
+│   ├── test_api.py               # FastAPI endpoint tests (42 total)
+│   ├── test_data.py              # Data integrity and schema tests
+│   ├── test_drift.py             # Drift detection unit tests
+│   ├── test_model.py             # Model quality gate + inference tests
+│   └── test_retrain.py           # Retraining pipeline + DAG import tests
+├── .dockerignore
+├── .env.example                  # Template — copy to .env before running
+├── docker-compose.yml            # api + mlflow + prometheus + grafana
+├── Dockerfile                    # Multi-stage API container
+├── pyproject.toml                # ruff, pytest config
+└── requirements.txt              # Pinned production dependencies
+```
+
+---
+
+## Quick Start (From Scratch)
+
+### Prerequisites
+
+| Tool | Minimum version | Purpose |
+|------|----------------|---------|
+| Python | 3.10+ | All local scripts and tests |
+| Git | 2.40+ | Version control |
+| Docker Desktop | 4.28+ | Container stack |
+| Docker Compose | v2.24+ | Multi-service orchestration |
+
+### 1 · Clone and set up environment
+
+```powershell
 git clone <repo-url>
 cd "Disease Prediction Using Machine Learning"
 
-# 2. Create and activate virtual environment (Windows PowerShell)
 python -m venv venv
 .\venv\Scripts\Activate.ps1
 
-# 3. Install dependencies
 pip install -r requirements.txt
-
-# 4. Run data audit
-python src/data_audit.py
-# Output written to docs/data_audit.md
+pip install -r requirements-dev.txt   # ruff, pytest-cov
 ```
 
-## Project Structure
-```
-├── config/          # YAML config files
-├── data/
-│   ├── raw/         # Original CSVs (read-only)
-│   ├── processed/   # Cleaned / feature-engineered data
-│   ├── feedback/    # User feedback logs
-│   └── prod_logs/   # Production prediction logs
-├── docs/            # Phase notes, audit reports, hashes
-├── models/          # Saved model artefacts
-├── notebooks/       # Exploratory analysis
-├── scripts/         # Utility / one-off scripts
-├── src/             # Source code
-└── tests/           # pytest test suite
+### 2 · Configure environment variables
+
+```powershell
+Copy-Item .env.example .env
+# Edit .env — set GRAFANA_ADMIN_PASSWORD and ADMIN_API_KEY at minimum
+notepad .env
 ```
 
-## Phases
+### 3 · Run the training pipeline (generates model artefacts)
+
+```powershell
+# Preprocess raw data
+python src/preprocess.py
+
+# Train all models and log to MLflow
+python src/train.py
+
+# Register best model and copy to models/production/
+python src/register_best.py
+```
+
+> **Note:** The repo already ships `models/production/` and `data/processed/`
+> so this step can be skipped if you just want to run tests and the API.
+
+### 4 · Run the test suite
+
+```powershell
+.\venv\Scripts\pytest tests\ -q
+# Expected: 43 passed
+```
+
+### 5 · Start the full Docker stack
+
+```powershell
+.\scripts\start.ps1
+# Or manually:
+docker compose up --build -d
+docker compose ps        # all services should show (healthy)
+```
+
+### 6 · Verify the API
+
+```powershell
+# Health check
+curl http://localhost:8000/health
+
+# Predict
+curl -X POST http://localhost:8000/predict `
+  -H "Content-Type: application/json" `
+  -d '{"symptoms": ["chest_pain", "breathlessness", "sweating"]}'
+
+# Prometheus metrics
+curl http://localhost:8000/metrics
+
+# MLflow UI  → http://localhost:5000
+# Grafana    → http://localhost:3000  (admin / <GRAFANA_ADMIN_PASSWORD>)
+# Prometheus → http://localhost:9090
+```
+
+### 7 · Stop the stack
+
+```powershell
+.\scripts\stop.ps1
+# Or: docker compose down
+```
+
+---
+
+## API Reference
+
+### `GET /health`
+```json
+{"status": "healthy", "model_loaded": true, "model_version": "1", "timestamp": "..."}
+```
+
+### `GET /symptoms`
+Returns the ordered list of all 131 valid symptom names.
+
+### `GET /model-info`
+Returns model metadata: type, version, quality gate status, load time.
+
+### `GET /metrics`
+Prometheus text-format metrics (scraped automatically by Prometheus).
+
+### `POST /predict`
+
+**Request:**
+```json
+{
+  "symptoms": ["chest_pain", "breathlessness", "sweating", "vomiting"]
+}
+```
+
+**Response:**
+```json
+{
+  "request_id": "abc123",
+  "model_version": "1",
+  "predictions": [
+    {
+      "disease": "Heart attack",
+      "confidence": 0.87,
+      "specialist": "Cardiologist"
+    },
+    {
+      "disease": "Bronchial Asthma",
+      "confidence": 0.07,
+      "specialist": "Pulmonologist"
+    },
+    {
+      "disease": "Pneumonia",
+      "confidence": 0.04,
+      "specialist": "Pulmonologist"
+    }
+  ],
+  "emergency_flag": true,
+  "emergency_reasons": ["Potential cardiac event detected"],
+  "disclaimer": "Suggestion tool, not a medical diagnosis."
+}
+```
+
+### `POST /feedback`
+```json
+{"request_id": "abc123", "helpful": false, "true_disease": "Pneumonia"}
+```
+
+### `POST /admin/reload-model`
+Requires header `X-API-Key: <ADMIN_API_KEY>`.
+
+---
+
+## Running Tests
+
+```powershell
+# Full suite
+.\venv\Scripts\pytest tests\ -v
+
+# Single module
+.\venv\Scripts\pytest tests\test_api.py -v
+
+# With coverage
+.\venv\Scripts\pytest tests\ --cov=src --cov-report=term-missing
+
+# Lint
+.\venv\Scripts\ruff check src tests dags scripts
+```
+
+---
+
+## Service Ports
+
+| Service | Port | URL |
+|---------|------|-----|
+| FastAPI | 8000 | http://localhost:8000 |
+| FastAPI docs (Swagger) | 8000 | http://localhost:8000/docs |
+| MLflow | 5000 | http://localhost:5000 |
+| Prometheus | 9090 | http://localhost:9090 |
+| Grafana | 3000 | http://localhost:3000 |
+
+---
+
+## Troubleshooting
+
+| Symptom | Fix |
+|---------|-----|
+| `ModuleNotFoundError: src` | Run from repo root; ensure venv is active |
+| `models/production/ not found` | Run `python src/register_best.py` first |
+| API returns 422 "Unknown symptom" | Use `GET /symptoms` to see valid names |
+| Docker: port already in use | Change ports in `.env` (API_PORT, etc.) |
+| Grafana shows "No data" | Wait ~30 s after `docker compose up`; send traffic with `generate_traffic.py` |
+| Prometheus "target down" | Ensure API container is healthy: `docker compose ps` |
+| Airflow DAG not visible | Mount `dags/` correctly; see `docs/architecture.md` |
+| ruff lint errors | Run `.\venv\Scripts\ruff check --fix src tests dags` |
+| pytest ImportError on Airflow | Expected on Windows — Airflow mocks are included in the DAG |
+
+---
+
+## Phases Completed
+
 | # | Phase | Branch |
 |---|-------|--------|
 | 1 | Project setup & data audit | `feature/phase-1-setup` |
-| 2 | Model training | `feature/phase-2-training` |
-| 3 | Evaluation & MLflow | `feature/phase-3-mlflow` |
-| 4 | pytest & CI/CD | `feature/phase-4-cicd` |
-| 5 | FastAPI service | `feature/phase-5-api` |
-| 6 | Docker / Compose | `feature/phase-6-docker` |
-| 7 | Monitoring (Prometheus + Grafana) | `feature/phase-7-monitoring` |
-| 8 | Drift detection (Evidently) | `feature/phase-8-drift` |
-| 9 | Retraining pipeline (Airflow) | `feature/phase-9-airflow` |
+| 2 | Preprocessing pipeline + data tests | `feature/phase-2-preprocessing` |
+| 3 | Training + MLflow tracking + quality gate | `feature/phase-3-mlflow` |
+| 4 | FastAPI service + emergency triage + feedback | `feature/phase-4-api` |
+| 5 | Docker + docker-compose | `feature/phase-5-docker` |
+| 6 | GitHub Actions CI/CD | `feature/phase-6-cicd` |
+| 7 | Prometheus metrics + Grafana dashboards | `feature/phase-7-monitoring` |
+| 8 | Evidently drift detection + simulation | `feature/phase-8-drift` |
+| 9 | Airflow DAG — auto-retrain + model promotion | `feature/phase-9-airflow` |
+| 10 | Documentation + demo readiness | `feature/phase-10-docs` |
+
+---
+
+## References
+
+See [`docs/references.md`](docs/references.md).
+
+## Disclaimer
+
+This system is a **student academic project**. It uses a synthetic/simplified dataset
+and should **never** be used for real clinical decisions. The emergency rules and
+specialist mappings are illustrative and require clinical review.
