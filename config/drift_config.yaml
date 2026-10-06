@@ -1,0 +1,22 @@
+# config/drift_config.yaml
+# Configuration for Data and Concept Drift Detection
+
+# Minimum number of production request logs required to perform drift analysis
+min_sample_size: 50
+
+# Threshold for individual feature drift statistical tests (p-value or distance threshold)
+feature_drift_p_value: 0.05
+
+# Proportion of drifted features required to trigger overall dataset drift alert
+# (e.g. 0.20 means >20% of the 131 features drifting triggers drift_detected = true)
+drift_share_threshold: 0.20
+
+# Threshold for prediction distribution drift (top-1 disease prediction frequency)
+prediction_drift_p_value: 0.05
+
+# Concept drift proxy threshold:
+# Fraction of feedback marked unhelpful/wrong (helpful=False) to trigger concept drift warning
+feedback_unhelpful_threshold: 0.25
+
+# Minimum feedback responses required before evaluating feedback concept drift
+min_feedback_sample_size: 10
