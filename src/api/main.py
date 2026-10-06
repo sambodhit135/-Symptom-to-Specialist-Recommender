@@ -7,6 +7,7 @@ Features:
   - GET /health: Service liveness & model readiness.
   - GET /symptoms: Ordered feature list for UI and client validation.
   - GET /model-info: Model metadata, version, load time, and quality gate status.
+  - GET /metrics: Prometheus exposition format for scraping.
   - POST /predict: Top-3 disease predictions with probabilities, specialists,
                    independent emergency triage rules, and request logging.
   - POST /feedback: Clinician/user feedback logging with disease validation.
@@ -24,13 +25,24 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 
 # Ensure project root in sys.path
 sys.path.insert(0, os.path.abspath("."))
 
 from src.api.emergency import EmergencyEvaluator
+from src.api.metrics import (
+    CONFIDENCE_HISTOGRAM,
+    EMERGENCY_FLAG_COUNT,
+    FEEDBACK_COUNT,
+    MODEL_INFO,
+    PREDICTIONS_BY_DISEASE,
+    PREDICTIONS_BY_SPECIALIST,
+    REQUEST_COUNT,
+    REQUEST_LATENCY,
+)
 from src.api.model_loader import ModelManager
 from src.api.schemas import (
     FeedbackRequest,
@@ -71,13 +83,26 @@ app.add_middleware(
 model_manager = ModelManager()
 emergency_evaluator = EmergencyEvaluator()
 
+# Seed the model info gauge once at startup
+MODEL_INFO.info(
+    {
+        "model_name": "symptom-disease-classifier",
+        "model_version": model_manager.model_version,
+        "model_type": model_manager.model_type,
+        "model_alias": model_manager.model_alias,
+    }
+)
+
 # Thread locks for safe CSV appends
 feedback_lock = threading.Lock()
 request_log_lock = threading.Lock()
 
+# Endpoints to track - /metrics excluded to avoid scraper noise
+_TRACKED_ENDPOINTS = {"/health", "/symptoms", "/model-info", "/predict", "/feedback"}
+
 
 # -----------------------------------------------------------------------------
-# MIDDLEWARE: JSON STRUCTURED REQUEST LOGGING
+# MIDDLEWARE: JSON STRUCTURED REQUEST LOGGING + PROMETHEUS INSTRUMENTATION
 # -----------------------------------------------------------------------------
 @app.middleware("http")
 async def json_structured_logging_middleware(request: Request, call_next):
@@ -86,13 +111,22 @@ async def json_structured_logging_middleware(request: Request, call_next):
     start_time = time.time()
 
     response = await call_next(request)
-    latency_ms = round((time.time() - start_time) * 1000, 2)
+    latency_s = time.time() - start_time
+    latency_ms = round(latency_s * 1000, 2)
+
+    endpoint = request.url.path
+    status_code = str(response.status_code)
+
+    # Instrument Prometheus — exclude /metrics scrape endpoint itself
+    if endpoint in _TRACKED_ENDPOINTS:
+        REQUEST_COUNT.labels(endpoint=endpoint, status_code=status_code).inc()
+        REQUEST_LATENCY.labels(endpoint=endpoint).observe(latency_s)
 
     log_entry = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "request_id": req_id,
         "method": request.method,
-        "path": request.url.path,
+        "path": endpoint,
         "status_code": response.status_code,
         "latency_ms": latency_ms,
         "client_ip": request.client.host if request.client else "unknown",
@@ -173,6 +207,13 @@ def health():
     )
 
 
+@app.get("/metrics")
+def metrics():
+    """Prometheus metrics exposition endpoint (scraped by Prometheus)."""
+    data = generate_latest()
+    return Response(content=data, media_type=CONTENT_TYPE_LATEST)
+
+
 @app.get("/symptoms")
 def get_symptoms():
     """Return the ordered list of all 131 valid symptom feature names."""
@@ -229,7 +270,15 @@ def predict(request: PredictRequest, req: Request):
     # 5. Extract request_id
     request_id = getattr(req.state, "request_id", uuid.uuid4().hex)
 
-    # 6. Log production request for drift detection
+    # 6. Update Prometheus metrics
+    top = predictions_raw[0]
+    PREDICTIONS_BY_DISEASE.labels(disease=top["disease"]).inc()
+    PREDICTIONS_BY_SPECIALIST.labels(specialist=top["specialist"]).inc()
+    CONFIDENCE_HISTOGRAM.observe(top["confidence"])
+    if emergency_flag:
+        EMERGENCY_FLAG_COUNT.inc()
+
+    # 7. Log production request for drift detection
     try:
         log_prediction_request(
             request_id=request_id,
@@ -270,6 +319,8 @@ def feedback(request: FeedbackRequest):
             helpful=request.helpful,
             true_disease=request.true_disease,
         )
+        # Update Prometheus feedback counter
+        FEEDBACK_COUNT.labels(helpful=str(request.helpful)).inc()
     except Exception as e:
         logger.error(f"Failed to append feedback: {e}")
         raise HTTPException(status_code=500, detail="Failed to save feedback.")

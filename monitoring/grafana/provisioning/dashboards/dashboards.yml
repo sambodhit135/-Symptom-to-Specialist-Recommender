@@ -1,0 +1,14 @@
+# monitoring/grafana/provisioning/dashboards/dashboards.yml
+# Tell Grafana where to find dashboard JSON files.
+
+apiVersion: 1
+
+providers:
+  - name: "disease-prediction"
+    orgId: 1
+    folder: "Disease Prediction"
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /etc/grafana/dashboards
