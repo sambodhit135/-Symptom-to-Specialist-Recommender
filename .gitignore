@@ -25,7 +25,9 @@ models/*.pkl
 models/*.joblib
 
 # Reports generated at runtime
-reports/
+reports/*
+!reports/drift/
+!reports/drift/.gitkeep
 
 # Feedback and production log data
 data/feedback/*

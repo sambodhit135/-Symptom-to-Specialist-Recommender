@@ -7,7 +7,7 @@ All metrics are defined here and imported by main.py.
 Avoids high-cardinality labels (no request_id, no raw symptom lists).
 """
 
-from prometheus_client import Counter, Histogram, Info
+from prometheus_client import Counter, Gauge, Histogram, Info
 
 # ── Request-level counters ────────────────────────────────────────────────────
 
@@ -62,4 +62,26 @@ FEEDBACK_COUNT = Counter(
 MODEL_INFO = Info(
     "api_model",
     "Static information about the currently serving model.",
+)
+
+# ── Drift detection gauges (Optional Phase 8 metrics) ─────────────────────────
+
+DRIFT_DETECTED = Gauge(
+    "api_drift_detected",
+    "Whether feature data drift is detected (1=yes, 0=no).",
+)
+
+DRIFT_SHARE = Gauge(
+    "api_drift_share",
+    "Share of drifted features between 0.0 and 1.0.",
+)
+
+DRIFT_PREDICTION_DETECTED = Gauge(
+    "api_drift_prediction_detected",
+    "Whether prediction distribution drift is detected (1=yes, 0=no).",
+)
+
+DRIFT_CONCEPT_DETECTED = Gauge(
+    "api_drift_concept_detected",
+    "Whether feedback concept drift is detected (1=yes, 0=no).",
 )
