@@ -290,6 +290,7 @@ Requires header `X-API-Key: <ADMIN_API_KEY>`.
 
 | Service | Port | URL |
 |---------|------|-----|
+| **Frontend UI** | **8080** | **http://localhost:8080** |
 | FastAPI | 8000 | http://localhost:8000 |
 | FastAPI docs (Swagger) | 8000 | http://localhost:8000/docs |
 | MLflow | 5000 | http://localhost:5000 |
@@ -298,6 +299,48 @@ Requires header `X-API-Key: <ADMIN_API_KEY>`.
 
 ---
 
+## Frontend
+
+A single-page vanilla HTML/CSS/JS UI served by an nginx container that also proxies
+all `/api/*` requests to the FastAPI backend — no CORS config needed.
+
+### Quick start
+
+```powershell
+# Start the full stack (includes the frontend service)
+docker compose up -d --build
+
+# Open in browser
+Start-Process "http://localhost:8080"
+
+# Verify the proxy works
+Invoke-RestMethod http://localhost:8080/api/health
+
+# Run a prediction through the proxy
+$body = '{"symptoms": ["chest_pain", "breathlessness", "sweating"]}'
+Invoke-RestMethod -Method Post -Uri http://localhost:8080/api/predict `
+  -ContentType 'application/json' -Body $body | ConvertTo-Json -Depth 10
+```
+
+### Flow
+```
+Browser → nginx:8080 → (strip /api prefix) → FastAPI:8000 → model
+```
+See [`docs/phase-11-notes.md`](docs/phase-11-notes.md) for the full architecture.
+
+### Screenshots
+
+> _Placeholder — replace with actual screenshots for the presentation._
+
+| Screen | What to show |
+|--------|--------------|
+| Symptom selection | Chips loaded, a few selected, tags visible |
+| Search filter | Search box filtering chip list |
+| Normal result | 3 cards with confidence bars + specialist |
+| Emergency result | Red banner + reasons (`chest_pain`, `breathlessness`, `sweating`) |
+| Feedback submitted | Thank-you message |
+| API offline error | Friendly error message, no blank page |
+
 ## Troubleshooting
 
 | Symptom | Fix |
@@ -305,7 +348,8 @@ Requires header `X-API-Key: <ADMIN_API_KEY>`.
 | `ModuleNotFoundError: src` | Run from repo root; ensure venv is active |
 | `models/production/ not found` | Run `python src/register_best.py` first |
 | API returns 422 "Unknown symptom" | Use `GET /symptoms` to see valid names |
-| Docker: port already in use | Change ports in `.env` (API_PORT, etc.) |
+| Docker: port already in use | Change ports in `.env` (`API_PORT`, `FRONTEND_PORT`, etc.) |
+| Frontend shows "Cannot reach the API" | Ensure `disease-api` container is healthy: `docker compose ps` |
 | Grafana shows "No data" | Wait ~30 s after `docker compose up`; send traffic with `generate_traffic.py` |
 | Prometheus "target down" | Ensure API container is healthy: `docker compose ps` |
 | Airflow DAG not visible | Mount `dags/` correctly; see `docs/architecture.md` |
@@ -328,6 +372,7 @@ Requires header `X-API-Key: <ADMIN_API_KEY>`.
 | 8 | Evidently drift detection + simulation | `feature/phase-8-drift` |
 | 9 | Airflow DAG — auto-retrain + model promotion | `feature/phase-9-airflow` |
 | 10 | Documentation + demo readiness | `feature/phase-10-docs` |
+| 11 | Frontend web interface (nginx + vanilla JS) | `feature/phase-11-frontend` |
 
 ---
 

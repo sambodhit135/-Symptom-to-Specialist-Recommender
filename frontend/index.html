@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- SEO -->
+  <title>Disease Predictor — Symptom-to-Specialist</title>
+  <meta name="description"
+        content="Academic disease prediction tool. Select your symptoms and get the top-3 likely conditions with the recommended medical specialist. Not for clinical use." />
+
+  <!-- Preconnect for Inter font (optional; works offline without it) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+    media="print"
+    onload="this.media='all'"
+  />
+  <noscript>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  </noscript>
+
+  <!-- Local stylesheet — no external CDN dependency -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     HEADER
+════════════════════════════════════════════════════════════════════════ -->
+<header class="site-header" role="banner">
+  <div class="page-wrap">
+    <h1>🩺 Disease Predictor</h1>
+    <p class="subtitle">
+      Select your symptoms · Get top-3 disease predictions · Find your specialist
+    </p>
+  </div>
+</header>
+
+<main class="page-wrap" role="main">
+
+  <!-- ── Status Bar ────────────────────────────────────────────────────── -->
+  <section id="status-bar" aria-label="System status">
+    <div class="status-pill" role="status" aria-live="polite">
+      <span class="status-dot" id="dot-api" aria-hidden="true"></span>
+      <span id="label-api">Checking API…</span>
+    </div>
+    <div class="status-pill" role="status" aria-live="polite">
+      <span class="status-dot" id="dot-model" aria-hidden="true"></span>
+      <span id="label-model">Checking model…</span>
+    </div>
+  </section>
+
+  <!-- ── Symptom Selector ───────────────────────────────────────────────── -->
+  <section class="card" aria-labelledby="symptom-heading">
+    <h2 id="symptom-heading">1 · Select Symptoms</h2>
+
+    <!-- Search box -->
+    <label for="symptom-search" class="sr-only">Search symptoms</label>
+    <input
+      type="search"
+      id="symptom-search"
+      placeholder="Search symptoms…"
+      autocomplete="off"
+      aria-label="Search symptoms"
+      aria-controls="symptom-list"
+    />
+
+    <!-- Symptom chip grid — populated by app.js -->
+    <div
+      id="symptom-list"
+      role="group"
+      aria-label="Symptom checkboxes"
+      aria-live="polite"
+    ></div>
+
+    <!-- Selected symptom tags -->
+    <div
+      id="selected-tags"
+      role="list"
+      aria-label="Selected symptoms"
+      aria-live="polite"
+    >
+      <span id="no-tags-hint" class="no-tags-hint">No symptoms selected yet.</span>
+    </div>
+
+    <!-- Validation message -->
+    <p
+      id="input-error"
+      class="message-box error"
+      role="alert"
+      aria-live="assertive"
+      style="display:none; margin-top:0.75rem;"
+    ></p>
+
+    <!-- Predict button -->
+    <button id="predict-btn" type="button" aria-live="polite">
+      <span class="spinner" aria-hidden="true"></span>
+      <span class="btn-text">🔍 Find Specialist</span>
+    </button>
+  </section>
+
+  <!-- ── API error box (backend down) ─────────────────────────────────── -->
+  <p
+    id="api-error-box"
+    class="message-box error"
+    role="alert"
+    aria-live="assertive"
+    style="display:none;"
+  ></p>
+
+  <!-- ── Emergency Banner ──────────────────────────────────────────────── -->
+  <div
+    id="emergency-banner"
+    role="alert"
+    aria-live="assertive"
+    aria-atomic="true"
+  >
+    <div class="emergency-title">
+      <span class="emergency-icon" aria-hidden="true">🚨</span>
+      Emergency — Seek Immediate Medical Attention
+    </div>
+    <ul id="emergency-reasons" class="emergency-reasons">
+      <!-- Populated by app.js via textContent -->
+    </ul>
+    <p class="emergency-advice">
+      Call emergency services or go to the nearest A&amp;E immediately.
+    </p>
+  </div>
+
+  <!-- ── Results Section ───────────────────────────────────────────────── -->
+  <section id="results-section" aria-labelledby="results-heading" aria-live="polite">
+    <div class="card">
+      <h2 id="results-heading">2 · Your Results</h2>
+
+      <!-- Result cards — populated by app.js -->
+      <div id="result-cards" class="result-cards">
+        <!-- Three result-card articles inserted by JS -->
+      </div>
+
+      <!-- Mandatory disclaimer (always shown after a prediction) -->
+      <p id="result-disclaimer" class="disclaimer"></p>
+    </div>
+  </section>
+
+  <!-- ── Feedback Section ──────────────────────────────────────────────── -->
+  <section
+    id="feedback-section"
+    aria-labelledby="feedback-heading"
+    aria-live="polite"
+  >
+    <h2 id="feedback-heading" style="font-size:1rem;font-weight:600;margin-bottom:0.75rem;">
+      3 · Was this helpful?
+    </h2>
+
+    <div class="feedback-btns" role="group" aria-label="Feedback options">
+      <button id="fb-yes" class="fb-btn yes" type="button" aria-label="Yes, this was helpful">
+        👍 Yes
+      </button>
+      <button id="fb-no" class="fb-btn no" type="button" aria-label="No, this was not helpful">
+        👎 No
+      </button>
+    </div>
+
+    <!-- Correction form — shown when user clicks No -->
+    <div id="correction-row" role="form" aria-label="Disease correction form">
+      <label for="true-disease-select">
+        What was the correct diagnosis? <em>(optional)</em>
+      </label>
+      <select id="true-disease-select" aria-label="Select correct disease">
+        <!-- Options populated by app.js from /api/diseases -->
+      </select>
+      <button id="submit-correction-btn" type="button">
+        Submit correction
+      </button>
+    </div>
+
+    <!-- Thank-you message after submission -->
+    <p
+      id="feedback-thanks"
+      class="feedback-thanks"
+      role="status"
+      aria-live="polite"
+    ></p>
+  </section>
+
+</main>
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     FOOTER
+════════════════════════════════════════════════════════════════════════ -->
+<footer class="site-footer" role="contentinfo">
+  <p>
+    Academic project — MLOps &amp; AI Development course &nbsp;|&nbsp;
+    <strong>Not for clinical use.</strong>
+  </p>
+  <p style="margin-top:0.3rem;">
+    <a href="/api/docs" target="_blank" rel="noopener noreferrer">API docs</a>
+    &nbsp;·&nbsp;
+    <a href="/api/health" target="_blank" rel="noopener noreferrer">Health</a>
+    &nbsp;·&nbsp;
+    <a href="http://localhost:5000" target="_blank" rel="noopener noreferrer">MLflow</a>
+  </p>
+</footer>
+
+<!-- Local script — no external CDN dependency -->
+<script src="app.js"></script>
+
+</body>
+</html>
