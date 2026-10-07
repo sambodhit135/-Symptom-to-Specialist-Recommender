@@ -112,6 +112,35 @@ class TestFrontendFiles:
             "app.js does not define API_BASE = '/api' -- may bypass nginx proxy"
         )
 
+    def test_app_js_defines_low_confidence_threshold(self):
+        """Phase 11b: app.js must define LOW_CONFIDENCE_THRESHOLD constant (default 0.40)."""
+        content = APP_JS.read_text(encoding="utf-8")
+        match = re.search(r"const\s+LOW_CONFIDENCE_THRESHOLD\s*=\s*([0-9.]+)", content)
+        assert match, "LOW_CONFIDENCE_THRESHOLD constant not found in app.js"
+        assert float(match.group(1)) == 0.40, (
+            f"Expected LOW_CONFIDENCE_THRESHOLD 0.40, got {match.group(1)}"
+        )
+
+    def test_app_js_defines_symptom_display_map(self):
+        """Phase 11b: app.js must define SYMPTOM_DISPLAY_MAP with typo fixes."""
+        content = APP_JS.read_text(encoding="utf-8")
+        assert "SYMPTOM_DISPLAY_MAP" in content, (
+            "SYMPTOM_DISPLAY_MAP not found in app.js"
+        )
+        assert "cold_hands_and_feets" in content and "cold hands and feet" in content, (
+            "cold_hands_and_feets mapping missing in SYMPTOM_DISPLAY_MAP"
+        )
+        assert "spotting_urination" in content and "spotting while urinating" in content, (
+            "spotting_urination mapping missing in SYMPTOM_DISPLAY_MAP"
+        )
+
+    def test_index_has_low_confidence_notice(self):
+        """Phase 11b: index.html must have low-confidence-notice element."""
+        content = INDEX_HTML.read_text(encoding="utf-8")
+        assert 'id="low-confidence-notice"' in content or "id='low-confidence-notice'" in content, (
+            "low-confidence-notice element missing in index.html"
+        )
+
 
 # ===========================================================================
 # (b) nginx.conf proxy rule
