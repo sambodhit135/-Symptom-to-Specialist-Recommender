@@ -286,6 +286,29 @@ input, select { font-family: inherit; }
   color: var(--clr-primary);
 }
 
+/* ── Neutral Notice Box (e.g. low confidence warning) ──────────────────── */
+.notice-box.neutral {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--clr-surface-2);
+  border: 1px solid var(--clr-border);
+  color: var(--clr-text);
+  border-radius: var(--radius-md);
+  padding: 0.85rem 1.1rem;
+  font-size: 0.92rem;
+  margin-bottom: 1.25rem;
+  line-height: 1.45;
+}
+.notice-box.neutral .notice-icon {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+.notice-box.neutral .notice-text {
+  flex: 1;
+  color: var(--clr-text);
+}
+
 /* ── Emergency Banner ───────────────────────────────────────────────────── */
 #emergency-banner {
   display: none;

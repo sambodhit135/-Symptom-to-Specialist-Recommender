@@ -19,9 +19,24 @@
 "use strict";
 
 /* ---------------------------------------------------------------------------
- * CONSTANTS — base URL is empty string because nginx proxies /api/* → API
+ * CONSTANTS
  * --------------------------------------------------------------------------- */
 const API_BASE = "/api";
+const LOW_CONFIDENCE_THRESHOLD = 0.40;
+
+/**
+ * Display-label map: fixes known dataset typos and grammar for display only.
+ * The original symptom keys are always preserved and sent to the API.
+ */
+const SYMPTOM_DISPLAY_MAP = {
+  "cold_hands_and_feets": "cold hands and feet",
+  "spotting_urination": "spotting while urinating",
+  "swollen_extremeties": "swollen extremities",
+  "scurring": "scarring",
+  "toxic_look_(typhos)": "toxic look (typhus)",
+  "dischromic_patches": "dyschromic patches",
+  "distention_of_abdomen": "distension of abdomen",
+};
 
 /* ---------------------------------------------------------------------------
  * STATE
@@ -61,6 +76,7 @@ const dom = {
 
   // Results
   resultsSection:     document.getElementById("results-section"),
+  lowConfidenceNotice:document.getElementById("low-confidence-notice"),
   resultCards:        document.getElementById("result-cards"),
   resultDisclaimer:   document.getElementById("result-disclaimer"),
   apiErrorBox:        document.getElementById("api-error-box"),
@@ -89,11 +105,26 @@ function show(el) { el.classList.add("visible"); }
 function hide(el) { el.classList.remove("visible"); }
 function setVisible(el, visible) { visible ? show(el) : hide(el); }
 
+/** Hide input validation error immediately */
+function hideInputError() {
+  if (dom.inputError) {
+    dom.inputError.textContent = "";
+    dom.inputError.style.display = "none";
+  }
+}
+
 /* ---------------------------------------------------------------------------
- * UTILITY: display name — replaces underscores with spaces for the UI
+ * UTILITY: display name — fixes known typos and replaces underscores with spaces
  * --------------------------------------------------------------------------- */
 function displayName(symptomName) {
-  return symptomName.replace(/_/g, " ");
+  if (SYMPTOM_DISPLAY_MAP[symptomName]) {
+    return SYMPTOM_DISPLAY_MAP[symptomName];
+  }
+  const spaced = symptomName.replace(/_/g, " ");
+  if (SYMPTOM_DISPLAY_MAP[spaced]) {
+    return SYMPTOM_DISPLAY_MAP[spaced];
+  }
+  return spaced;
 }
 
 /* ---------------------------------------------------------------------------
@@ -207,6 +238,8 @@ function renderSymptomList(symptoms) {
 function onSymptomToggle(name, checked) {
   if (checked) {
     state.selectedSet.add(name);
+    // Requirement 4: hide validation error as soon as a symptom is selected
+    hideInputError();
   } else {
     state.selectedSet.delete(name);
   }
@@ -292,8 +325,10 @@ function clearResults() {
   hide(dom.resultsSection);
   hide(dom.emergencyBanner);
   hide(dom.feedbackSection);
-  dom.inputError.textContent  = "";
-  dom.inputError.style.display = "none";
+  hideInputError();
+  if (dom.lowConfidenceNotice) {
+    dom.lowConfidenceNotice.style.display = "none";
+  }
   dom.apiErrorBox.textContent  = "";
   dom.apiErrorBox.style.display = "none";
   state.lastRequestId = null;
@@ -378,9 +413,19 @@ function renderEmergencyBanner(flag, reasons) {
 function renderResults(predictions, disclaimer) {
   dom.resultCards.innerHTML = "";
 
+  // Requirement 2: when top-1 confidence is below threshold, show neutral notice above results
+  const top1Confidence = (predictions && predictions.length > 0) ? predictions[0].confidence : 0;
+  if (dom.lowConfidenceNotice) {
+    if (top1Confidence < LOW_CONFIDENCE_THRESHOLD) {
+      dom.lowConfidenceNotice.style.display = "flex";
+    } else {
+      dom.lowConfidenceNotice.style.display = "none";
+    }
+  }
+
   predictions.forEach((pred, idx) => {
     const rank = idx + 1;
-    const pct  = Math.round(pred.confidence * 100);
+    const pct  = (pred.confidence * 100).toFixed(1);
 
     const card = document.createElement("article");
     card.className = `result-card rank-${rank}`;
@@ -411,7 +456,7 @@ function renderResults(predictions, disclaimer) {
     const barWrap = document.createElement("div");
     barWrap.className = "confidence-bar-wrap";
     barWrap.setAttribute("role", "progressbar");
-    barWrap.setAttribute("aria-valuenow", pct);
+    barWrap.setAttribute("aria-valuenow", Math.round(pred.confidence * 100));
     barWrap.setAttribute("aria-valuemin", "0");
     barWrap.setAttribute("aria-valuemax", "100");
 

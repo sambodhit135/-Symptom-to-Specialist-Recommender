@@ -133,6 +133,17 @@
   <section id="results-section" aria-labelledby="results-heading" aria-live="polite">
     <div class="card">
       <h2 id="results-heading">2 · Your Results</h2>
+      <!-- Neutral Low-confidence notice (shown if top-1 confidence < LOW_CONFIDENCE_THRESHOLD) -->
+      <div
+        id="low-confidence-notice"
+        class="notice-box neutral"
+        role="status"
+        aria-live="polite"
+        style="display:none;"
+      >
+        <span class="notice-icon" aria-hidden="true">ℹ️</span>
+        <span class="notice-text">Low confidence. Please add more symptoms for a better suggestion.</span>
+      </div>
 
       <!-- Result cards — populated by app.js -->
       <div id="result-cards" class="result-cards">
